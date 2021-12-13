@@ -2,6 +2,7 @@
 *.swp
 *~
 venv
+.python-version
 
 # C extensions
 *.so

@@ -5,7 +5,5 @@
 # Copyright: Patrick Ng - 2012
 #
 
-from .retry_decorator import *
-
 __title__ = 'retry_decorator'
-__version__ = "2.0.a1"
+__version__ = '0.0.1'

@@ -1,0 +1,25 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: test
+  image: python:3-alpine
+  commands:
+  - tox
+
+- name: pypi_publish
+  image: plugins/pypi
+  settings:
+    username:
+      from_secret: public_pypi_username
+    password:
+      from_secret: public_pypi_password
+
+trigger:
+  ref:
+  - refs/heads/master
+  - refs/heads/develop
+  - refs/heads/feature/*
+  - refs/tags/*
