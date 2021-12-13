@@ -91,6 +91,7 @@ class RetryHandler(object):
     def __init__(
             self, exc=Exception, tries=10, timeout_secs=1.0, logger=None, callback_by_exception=None,
     ):
+        # validate 'tries' arg:
         if not isinstance(tries, int):
             raise TypeError("[tries] arg needs to be of int type")
         elif tries < 1:
