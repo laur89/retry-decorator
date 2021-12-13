@@ -8,10 +8,9 @@ from retry_decorator import __version__
 setup(
         name='retry_decorator',
         version=__version__,
-        author='Patrick Ng',
-        author_email='pn.appdev@gmail.com',
+        author='Laur',
         scripts=[],
-        url='https://github.com/pnpnpn/retry-decorator',
+        url='https://github.com/laur89/retry-decorator',
         license='MIT',
         packages=find_packages(),
         description='Retry Decorator',
@@ -20,9 +19,8 @@ setup(
         classifiers=[
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3 :: Only',
-            'Programming Language :: Python :: 3.5',
-            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
         ]
 )

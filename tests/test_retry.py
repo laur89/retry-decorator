@@ -20,24 +20,23 @@ def callback(msg):
 
 
 @retry(Exception, tries=3, timeout_secs=0.1)
-def test_retry_via_decorator():
+def retry_test_via_decorator():
     throw_err('retry-via-deco')
 
 
-def test_retry_via_instance():
-    cbe = {
-        Exception: lambda: callback('retry-via-instance')
-    }
-    retry(tries=3, callback_by_exception=cbe)(throw_err)('retry-via-instance')
-
-
-if __name__ == '__main__':
+def test_decorator():
     try:
-        test_retry_via_decorator()
+        retry_test_via_decorator()
     except Exception as e:
         print('Received the last exception')
 
+
+def test_instance():
+    cbe = {
+        Exception: lambda: callback('retry-via-instance')
+    }
+
     try:
-        test_retry_via_instance()
+        retry(tries=3, callback_by_exception=cbe)(throw_err)('retry-via-instance')
     except Exception as e:
         print('Received the last exception')
