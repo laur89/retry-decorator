@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 from retry_decorator import __version__
 
 setup(
-        name='retry_decorator',
+        name='retry-deco',
         version=__version__,
         author='Laur',
         scripts=[],

@@ -6,6 +6,7 @@
 import logging
 import time
 import random
+import functools
 
 
 def _is_valid_iter(i):
@@ -28,6 +29,7 @@ def _deco_retry(f, exc=Exception, tries=10, timeout_secs=1.0, logger=None, callb
     :return:
     """
 
+    @functools.wraps(f)
     def f_retry(*args, **kwargs):
         mtries, mdelay = tries, timeout_secs
         run_one_last_time = True

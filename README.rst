@@ -65,3 +65,11 @@ unless [PR21](https://github.com/pnpnpn/retry-decorator/pull/21) (which is the r
 for this fork) is accepted.
 
 So... it's up to you which project you raise your PR against, but contributions are welcome.
+
+
+See also
+--------
+- [PyRetry](https://github.com/Abeautifulsnow/PyRetry)
+- [retry_module](https://github.com/adityaprakash-bobby/retry_module)
+- [retry2](https://github.com/eSAMTrade/retry)
+
