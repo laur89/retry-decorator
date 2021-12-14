@@ -2,7 +2,7 @@ import unittest
 from decimal import Decimal
 from functools import partial
 
-import retry_decorator
+from retry_decorator import retry, RetryHandler
 
 
 class ClassForTesting(object):
@@ -118,7 +118,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(result, 'aB')
 
     def test_verify_args_are_passed_and_returned_2(self):
-        result = retry_decorator.RetryHandler()(add_two_values_after, 'a', 'B', 1)
+        result = RetryHandler()(add_two_values_after, 'a', 'B', 1)
 
         self.assertEqual(class_for_testing.hello, None)
         self.assertEqual(class_for_testing.cb_counter, 0)
@@ -126,7 +126,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(result, 'aB')
 
     def test_verify_args_are_passed_and_returned_3(self):
-        result = retry_decorator.retry()(add_two_values_after)(Decimal('2.3'), Decimal('5.6'), 1)
+        result = retry()(add_two_values_after)(Decimal('2.3'), Decimal('5.6'), 1)
 
         self.assertEqual(class_for_testing.hello, None)
         self.assertEqual(class_for_testing.cb_counter, 0)
@@ -135,14 +135,14 @@ class MyTestCase(unittest.TestCase):
 
     def test_verify_tries_0_errors_out(self):
         try:
-            retry_decorator.retry(tries=0, callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
+            retry(tries=0, callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
             raise AssertionError('Expected ValueError to be thrown')
         except ValueError:
             pass
 
     def test_verify_tries_not_int_is_error(self):
         try:
-            retry_decorator.retry(tries='not int', callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
+            retry(tries='not int', callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
             raise AssertionError('Expected TypeError to be thrown')
         except TypeError:
             pass
@@ -154,30 +154,30 @@ def callback_logic(instance, attr_to_set, value_to_set):
     instance.cb_counter += 1
 
 
-@retry_decorator.retry(exc=ExampleTestError, tries=2, callback_by_exception={
+@retry(exc=ExampleTestError, tries=2, callback_by_exception={
     ExampleTestError: partial(callback_logic, class_for_testing, 'hello', 'world')})
 def my_test_func():
     raise ExampleTestError('oh noes.')
 
 
-@retry_decorator.retry(exc=(ExampleTestError, AttributeError), tries=2, callback_by_exception={
+@retry(exc=(ExampleTestError, AttributeError), tries=2, callback_by_exception={
     AttributeError: partial(callback_logic, class_for_testing, 'hello', 'fish')})
 def my_test_func_2():
     class_for_testing.exe_counter += 1
     raise AttributeError('attribute oh noes.')
 
 
-@retry_decorator.retry(tries=2, callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
+@retry(tries=2, callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
 def my_test_func_3():
     raise TypeError('type oh noes.')
 
 
-@retry_decorator.retry(tries=2, callback_by_exception=(partial(callback_logic, class_for_testing, 'hello', 'bar'), False))
+@retry(tries=2, callback_by_exception=(partial(callback_logic, class_for_testing, 'hello', 'bar'), False))
 def my_test_func_4():
     raise TypeError('type oh noes.')
 
 
-@retry_decorator.retry(tries=6, callback_by_exception={
+@retry(tries=6, callback_by_exception={
     TypeError: partial(callback_logic, class_for_testing, 'hello', 'foo'),
     Exception: partial(callback_logic, class_for_testing, 'hello', 'bar')
     })
@@ -186,7 +186,7 @@ def my_test_func_5():
     raise TypeError('type oh noes.')
 
 
-@retry_decorator.retry(exc=ExampleTestError, tries=6, callback_by_exception={
+@retry(exc=ExampleTestError, tries=6, callback_by_exception={
     TypeError: partial(callback_logic, class_for_testing, 'hello', 'bar'),
     ExampleTestError: partial(callback_logic, class_for_testing, 'hello', 'foo')
     })
@@ -195,7 +195,7 @@ def my_test_func_6():
     raise ExampleTestError('oh noes.')
 
 
-@retry_decorator.retry(tries=7, callback_by_exception={
+@retry(tries=7, callback_by_exception={
     TypeError: (partial(callback_logic, class_for_testing, 'hello', 'baz'), True),
     Exception: partial(callback_logic, class_for_testing, 'hello', 'foo')
     })
@@ -204,7 +204,7 @@ def my_test_func_7():
     raise TypeError('type oh noes.')
 
 
-@retry_decorator.retry(tries=8, callback_by_exception={
+@retry(tries=8, callback_by_exception={
     TypeError: partial(callback_logic, class_for_testing, 'hello', 'foo'),
     Exception: (partial(callback_logic, class_for_testing, 'hello', 'bar'), (False, False))
     })
@@ -213,13 +213,13 @@ def my_test_func_8():
     raise TypeError('type oh noes.')
 
 
-@retry_decorator.retry(tries=1, callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
+@retry(tries=1, callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
 def my_test_func_9():
     class_for_testing.exe_counter += 1
     raise TypeError('type oh noes.')
 
 
-@retry_decorator.retry(tries=2, callback_by_exception=(partial(callback_logic, class_for_testing, 'hello', 'foo'), (False, False)))
+@retry(tries=2, callback_by_exception=(partial(callback_logic, class_for_testing, 'hello', 'foo'), (False, False)))
 def my_test_func_10():
     class_for_testing.exe_counter += 1
     raise TypeError('type oh noes.')
@@ -233,7 +233,7 @@ def add_two_values_after(val1, val2, after):
     return val1 + val2
 
 
-@retry_decorator.retry(tries=2)
+@retry(tries=2)
 def my_test_func_11(val1, val2, after):
     return add_two_values_after(**locals())
 
