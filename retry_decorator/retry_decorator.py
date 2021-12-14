@@ -109,7 +109,7 @@ class RetryHandler(object):
         self.callback_by_exception = callback_by_exception
         super().__init__()
 
-    def __call__(self, f, *args, **kwargs):
+    def __call__(self, f):
         retry_return = _deco_retry(
             f, self.exc, self.tries, self.timeout_secs, self.logger, self.callback_by_exception,
         )

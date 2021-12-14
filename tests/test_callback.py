@@ -108,6 +108,30 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(class_for_testing.cb_counter, 1)
         self.assertEqual(class_for_testing.exe_counter, 1)
 
+    def test_verify_args_are_passed_and_returned(self):
+        result = my_test_func_11('a', 'B', 1)
+
+        self.assertEqual(class_for_testing.hello, None)
+        self.assertEqual(class_for_testing.cb_counter, 0)
+        self.assertEqual(class_for_testing.exe_counter, 2)
+        self.assertEqual(result, 'aB')
+
+    def test_verify_args_are_passed_and_returned_2(self):
+        result = retry_decorator.RetryHandler()(add_two_values_after)('a', 'B', 1)
+
+        self.assertEqual(class_for_testing.hello, None)
+        self.assertEqual(class_for_testing.cb_counter, 0)
+        self.assertEqual(class_for_testing.exe_counter, 2)
+        self.assertEqual(result, 'aB')
+
+    def test_verify_args_are_passed_and_returned_3(self):
+        result = retry_decorator.retry()(my_test_func_11)('a', 'B', 1)
+
+        self.assertEqual(class_for_testing.hello, None)
+        self.assertEqual(class_for_testing.cb_counter, 0)
+        self.assertEqual(class_for_testing.exe_counter, 2)
+        self.assertEqual(result, 'aB')
+
     def test_verify_tries_0_errors_out(self):
         try:
             retry_decorator.retry(tries=0, callback_by_exception=partial(callback_logic, class_for_testing, 'hello', 'foo'))
@@ -198,6 +222,19 @@ def my_test_func_9():
 def my_test_func_10():
     class_for_testing.exe_counter += 1
     raise TypeError('type oh noes.')
+
+
+def add_two_values_after(val1, val2, after):
+    class_for_testing.exe_counter += 1
+
+    if class_for_testing.exe_counter <= after:
+        raise TypeError('type oh noes.')
+    return val1 + val2
+
+
+@retry_decorator.retry(tries=2)
+def my_test_func_11(val1, val2, after):
+    return add_two_values_after(**locals())
 
 
 if __name__ == '__main__':
