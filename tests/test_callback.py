@@ -1,4 +1,5 @@
 import unittest
+from decimal import Decimal
 from functools import partial
 
 import retry_decorator
@@ -125,12 +126,12 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(result, 'aB')
 
     def test_verify_args_are_passed_and_returned_3(self):
-        result = retry_decorator.retry()(add_two_values_after)(2.3, 5.6, 1)
+        result = retry_decorator.retry()(add_two_values_after)(Decimal('2.3'), Decimal('5.6'), 1)
 
         self.assertEqual(class_for_testing.hello, None)
         self.assertEqual(class_for_testing.cb_counter, 0)
         self.assertEqual(class_for_testing.exe_counter, 2)
-        self.assertEqual(result, 7.9)
+        self.assertEqual(result, Decimal('7.9'))
 
     def test_verify_tries_0_errors_out(self):
         try:
