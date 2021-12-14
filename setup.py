@@ -14,7 +14,7 @@ setup(
         license='MIT',
         packages=find_packages(),
         description='Retry Decorator',
-        long_description=open('README.rst').read() if exists("README.rst") else "",
+        long_description=open('README.md').read() if exists('README.md') else '',
         install_requires=[],
         classifiers=[
             'Programming Language :: Python :: 3',

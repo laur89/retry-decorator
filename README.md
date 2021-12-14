@@ -1,8 +1,4 @@
-.. image:: https://badge.fury.io/py/retry_deco.svg
-    :target: https://badge.fury.io/py/retry_deco
-
-.. image:: https://travis-ci.org/laur89/retry-deco.svg?branch=master
-    :target: https://travis-ci.org/laur89/retry-deco
+[![PyPI version](https://badge.fury.io/py/retry-deco.svg)](https://badge.fury.io/py/retry-deco)
     
 Usage
 -----
