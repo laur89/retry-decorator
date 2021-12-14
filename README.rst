@@ -37,6 +37,13 @@ Retry decorator
             Exception: lambda: callback('retry-via-instance')
         }
         retry(tries=3, callback_by_exception=cbe)(throw_err)('retry-via-instance')
+
+
+    def test_retry_via_instance2():
+        cbe = {
+            Exception: lambda: callback('retry-via-instance2')
+        }
+        RetryHandler(tries=3, callback_by_exception=cbe)(throw_err, 'retry-via-instance2')
     
     
     if __name__ == '__main__':
@@ -47,6 +54,11 @@ Retry decorator
     
         try:
             test_retry_via_instance()
+        except Exception as e:
+            print('Received the last exception')
+    
+        try:
+            test_retry_via_instance2()
         except Exception as e:
             print('Received the last exception')
 

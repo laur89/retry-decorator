@@ -7,7 +7,7 @@
 
 from __future__ import print_function
 import sys
-from retry_decorator import retry
+from retry_decorator import retry, RetryHandler
 
 
 def throw_err(msg):
@@ -38,5 +38,12 @@ def test_instance():
 
     try:
         retry(tries=3, callback_by_exception=cbe)(throw_err)('retry-via-instance')
+    except Exception as e:
+        print('Received the last exception')
+
+
+def test_instance2():
+    try:
+        RetryHandler(tries=3, callback_by_exception=lambda: callback('retry-via-instance2'))(throw_err, 'retry-via-instance2')
     except Exception as e:
         print('Received the last exception')

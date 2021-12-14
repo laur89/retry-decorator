@@ -117,7 +117,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(result, 'aB')
 
     def test_verify_args_are_passed_and_returned_2(self):
-        result = retry_decorator.RetryHandler()(add_two_values_after)('a', 'B', 1)
+        result = retry_decorator.RetryHandler()(add_two_values_after, 'a', 'B', 1)
 
         self.assertEqual(class_for_testing.hello, None)
         self.assertEqual(class_for_testing.cb_counter, 0)
@@ -125,12 +125,12 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(result, 'aB')
 
     def test_verify_args_are_passed_and_returned_3(self):
-        result = retry_decorator.retry()(my_test_func_11)('a', 'B', 1)
+        result = retry_decorator.retry()(add_two_values_after)(2.3, 5.6, 1)
 
         self.assertEqual(class_for_testing.hello, None)
         self.assertEqual(class_for_testing.cb_counter, 0)
         self.assertEqual(class_for_testing.exe_counter, 2)
-        self.assertEqual(result, 'aB')
+        self.assertEqual(result, 7.9)
 
     def test_verify_tries_0_errors_out(self):
         try:
