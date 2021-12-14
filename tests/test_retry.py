@@ -5,7 +5,6 @@
 # Copyright: Patrick Ng - 2012
 #
 
-from __future__ import print_function
 import sys
 from retry_decorator import retry, RetryHandler
 

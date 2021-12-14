@@ -1,17 +1,14 @@
 [![PyPI version](https://badge.fury.io/py/retry-deco.svg)](https://badge.fury.io/py/retry-deco)
     
-Usage
------
+# Retry decorator
 
-Retry decorator
+## Usage
 
-::
-
+```
     #!/usr/bin/env python
 
-    from __future__ import print_function
     import sys
-    from retry_decorator import retry
+    from retry_decorator import retry, RetryHandler
     
     
     def throw_err(msg):
@@ -57,16 +54,19 @@ Retry decorator
             test_retry_via_instance2()
         except Exception as e:
             print('Received the last exception')
+```
 
 
-Credits
--------
+## Building
 
-This project is a fork of upstream https://github.com/pnpnpn/retry-decorator
+```
+python -m pip install --upgrade build
+python3 -m build
+```
 
 
-Contribute
-----------
+## Contribute
+
 Best contribute to [upstream](https://github.com/pnpnpn/retry-decorator) project,
 but it _might_ be abandoned. Also its defaults will be different from this project,
 unless [PR21](https://github.com/pnpnpn/retry-decorator/pull/21) (which is the reason
@@ -75,8 +75,13 @@ for this fork) is accepted.
 So... it's up to you which project you raise your PR against, but contributions are welcome.
 
 
-See also
---------
+## Credits
+
+This project is a fork of upstream https://github.com/pnpnpn/retry-decorator
+
+
+## See also
+
 - [PyRetry](https://github.com/Abeautifulsnow/PyRetry)
 - [retry_module](https://github.com/adityaprakash-bobby/retry_module)
 - [retry2](https://github.com/eSAMTrade/retry)
