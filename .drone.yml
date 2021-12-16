@@ -17,6 +17,9 @@ steps:
       from_secret: public_pypi_username
     password:
       from_secret: public_pypi_password
+  when:
+    event:
+    - tag
 
 trigger:
   ref:
