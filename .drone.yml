@@ -9,6 +9,73 @@ steps:
   commands:
   - pip install tox
   - tox
+  when:
+    event:
+    - push
+    - pull_request
+    - promote
+    - rollback
+
+# note zest does everything, including tagging!
+- name: version-tag-changelog
+  image: python:3-bullseye
+  commands:
+  - git config --global user.email "zest.releaser@example.com"
+  - git config --global user.name "Zest Releaser"
+  - pip install zest.releaser
+  - fullrelease --no-input
+  #- git push origin --tags
+  when:
+    branch:
+    - master
+
+#- name: git-push
+  #image: docker:git
+  #commands:
+  #- git push origin --tags
+  #when:
+    #branch:
+    #- master
+
+- name: git-push
+  image: appleboy/drone-git-push
+  settings:
+    ssh_key:
+      from_secret: github_ssh_key
+    branch: "${DRONE_BRANCH}"
+    remote: "${DRONE_GIT_SSH_URL}"
+    force: false
+    followtags: true
+    # OR, when committing dirty state:
+    #commit: true
+    #commit_message: "Update readme to new version [CI SKIP]"
+    #author_name: drone-bot
+    #author_email: drone-bot@jobrunr.io
+  when:
+    branch:
+    - master
+
+- name: build
+  image: python:3-alpine
+  commands:
+  - pip install build
+  - python -m build
+  when:
+    event: tag
+
+- name: github-release
+  image: plugins/github-release
+  settings:
+    api_key:
+      from_secret: github_token
+    files:
+      - dist/*
+    title: "${DRONE_TAG}"
+    #note: CHANGELOG.md
+    checksum:
+       - sha256
+  when:
+    event: tag
 
 - name: pypi-publish
   image: plugins/pypi
@@ -17,6 +84,9 @@ steps:
       from_secret: public_pypi_username
     password:
       from_secret: public_pypi_password
+    distributions:
+    - sdist
+    - bdist_wheel
   when:
     event:
     - tag
