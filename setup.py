@@ -3,7 +3,6 @@ from setuptools import setup, find_packages
 
 __package_name__ = 'retry-deco'
 __author__ = 'Laur'
-__version__ = '0.0.1'
 __url__ = 'https://github.com/laur89/retry-decorator'
 __license__ = 'MIT'
 __description__ = 'Retry Decorator for py'
@@ -12,7 +11,7 @@ readme_f = 'README.md'
 
 setup(
         name=__package_name__,
-        version=__version__,
+        version='0.0.1.dev0',  # managed by zest.releaser!
         description=__description__,
         author=__author__,
         url=__url__,
