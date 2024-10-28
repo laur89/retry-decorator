@@ -7,7 +7,7 @@ steps:
 - name: test
   image: python:3-alpine
   commands:
-  - pip install tox
+  - pip install --no-cache-dir tox
   - tox
   when:
     event:
@@ -20,11 +20,8 @@ steps:
 - name: version-tag-changelog
   image: python:3-bookworm
   commands:
-  - git config --global user.email "zest.releaser@example.com"
-  - git config --global user.name "Zest Releaser"
-  - pip install zest.releaser
+  - pip install --no-cache-dir zest.releaser
   - fullrelease --no-input
-  #- git push origin --tags
   when:
     branch:
     - master
@@ -42,7 +39,6 @@ steps:
   settings:
     ssh_key:
       from_secret: github_ssh_key
-    branch: "${DRONE_BRANCH}"
     remote: "${DRONE_GIT_SSH_URL}"
     force: false
     followtags: true
@@ -58,7 +54,7 @@ steps:
 - name: build
   image: python:3-alpine
   commands:
-  - pip install build
+  - pip --no-cache-dir install build
   - python -m build
   when:
     event: tag
@@ -84,16 +80,16 @@ steps:
       from_secret: public_pypi_username
     password:
       from_secret: public_pypi_password
+    skip_build: true
     distributions:
     - sdist
     - bdist_wheel
   when:
-    event:
-    - tag
+    event: tag
 
 trigger:
   ref:
   - refs/heads/master
-  - refs/heads/develop
+  #- refs/heads/develop
   - refs/heads/feature/*
   - refs/tags/*
