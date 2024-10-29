@@ -11,7 +11,7 @@ readme_f = 'README.md'
 
 setup(
         name=__package_name__,
-        version='0.0.1.dev0',  # managed by zest.releaser!
+        version='1.1.2.dev0',  # managed by zest.releaser!
         description=__description__,
         author=__author__,
         url=__url__,
