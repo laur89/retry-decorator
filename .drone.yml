@@ -5,7 +5,7 @@ name: default
 
 steps:
 - name: test
-  image: python:3-alpine
+  image: python:3.13-alpine
   commands:
   - pip install --no-cache-dir tox
   - tox
@@ -52,7 +52,7 @@ steps:
     - master
 
 - name: build
-  image: python:3-alpine
+  image: python:3.13-alpine
   commands:
   - pip --no-cache-dir install build
   - python -m build
