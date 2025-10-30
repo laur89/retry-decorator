@@ -82,6 +82,7 @@ This project is a fork of upstream https://github.com/pnpnpn/retry-decorator
 
 ## See also
 
+- [gitlab/ramil.minnigaliev/the-retry](https://gitlab.com/ramil.minnigaliev/the-retry)
 - [Abeautifulsnow/PyRetry](https://github.com/Abeautifulsnow/PyRetry)
 - [adityaprakash-bobby/retry_module](https://github.com/adityaprakash-bobby/retry_module)
 - [eSAMTrade/retry](https://github.com/eSAMTrade/retry)
