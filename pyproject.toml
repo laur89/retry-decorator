@@ -1,0 +1,103 @@
+[project]
+name = "retry-deco"
+version = "0.0.3.dev0"
+description = "Retry decorator for both synchronous and asynchronous functions."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["decorator", "retry", "async-retry", "retry-deco"]
+authors = [
+  {name = "Laur"}
+]
+maintainers = [
+  {name = "Laur"}
+]
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 5 - Production/Stable",
+
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries",
+
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent"
+]
+
+[project.urls]
+homepage = "https://github.com/laur89/retry-deco"
+issues = "https://github.com/laur89/retry-deco/issues"
+changelog = "https://github.com/laur89/retry-deco/blob/master/CHANGELOG.md"
+
+# Development dependencies
+# pip install -e .[lint,test,exe]
+# pip install -e .[dev]
+# pip install -e .[test]
+[project.optional-dependencies]
+dev = [
+    # Handles most of the testing work, including execution
+    # Docs: https://docs.pytest.org/en/stable/contents.html
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",  # linting
+    "ty", # checking types
+    "ipdb", # debugging
+]
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=80.9"
+]
+
+# Python modules and packages that are included in the
+# distribution package (and therefore become importable)
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*"]
+
+[tool.zest-releaser]
+extra-message = "[CI SKIP]"
+# push to git remote:
+push-changes = true
+# do not release to pypi:
+release = false
+history_format = "md"
+
+# note tool.pytest is only supported from pytest 9.0, but in '25 pytest-asyncio
+# still requires ver <9.0
+# until it's done, we configure pytest in tox.ini instead
+[tool.pytest]
+#minversion = "9.0"
+#python_functions = "test_"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = ["-vvl"]
+#addopts = ["--black", "--flakes", "--cov", "--cache-clear", "-vvl"]
+#norecursedirs = [
+#    ".vscode",
+#    "__pycache__"
+#]
+
+[tool.ty]
+# All rules are enabled as "error" by default; no need to specify unless overriding.
+# Example override: relax a rule for the entire project (uncomment if needed).
+# rules.TY015 = "warn"  # For invalid-argument-type, warn instead of error.
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+]
+
+#[tool.uv]
+#package = true

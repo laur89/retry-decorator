@@ -2,7 +2,10 @@
 *.swp
 *~
 venv
+.venv
 .python-version
+.pytest_cache
+__pycache__
 
 # C extensions
 *.so
