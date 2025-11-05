@@ -1,5 +1,6 @@
 include *.txt
 include *.rst
+include *.md
 recursive-include docs *
-include CHANGES.txt
+include CHANGELOG.md
 recursive-include tests *

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from retry_deco import retry
+from retry_deco import Retry, RetryAsync
 
 BACKOFF = 0.002  # Base backoff parameter for tests.
 
@@ -31,38 +31,34 @@ async def async_failed():
 
 
 def test_retry__expected_exceptions(failed):
-    decorator = retry((ValueError, RuntimeError))
-    decorated = decorator(failed)
+    instance = Retry((ValueError, RuntimeError))
     with pytest.raises(RuntimeError):
-        decorated()
+        instance(failed)
     assert failed.call_count > 1
 
 
 def test_retry__expected_exceptions__no_retry(failed):
     """check not retry if raised exception is not expected."""
-    decorator = retry(ValueError)
-    decorated = decorator(failed)
+    instance = Retry(ValueError)
     with pytest.raises(RuntimeError):
-        decorated()
+        instance(failed)
     assert failed.call_count == 1
 
 
 def test_retry__attempts(failed):
     attempts = 3
-    decorator = retry(RuntimeError, retries=attempts - 1)
-    decorated = decorator(failed)
+    instance = Retry(RuntimeError, retries=attempts - 1)
     with pytest.raises(RuntimeError):
-        decorated()
+        instance(failed)
     assert failed.call_count == attempts
 
 
 def test_retry__backoff(failed):
     backoff = BACKOFF
-    decorator = retry(RuntimeError, backoff=backoff)
-    decorated = decorator(failed)
+    instance = Retry(RuntimeError, backoff=backoff)
     time_start = time.time()
     with pytest.raises(RuntimeError):
-        decorated()
+        instance(failed)
     estimated_time = time.time() - time_start
     assert backoff < estimated_time < backoff * 2
 
@@ -70,11 +66,10 @@ def test_retry__backoff(failed):
 @pytest.mark.asyncio()
 async def test_retry__backoff__async(async_failed):
     backoff = BACKOFF
-    decorator = retry(RuntimeError, backoff=backoff)
-    decorated = decorator(async_failed)
+    instance = RetryAsync(RuntimeError, backoff=backoff)
     time_start = time.time()
     with pytest.raises(RuntimeError):
-        await decorated()
+        await instance(async_failed)
     estimated_time = time.time() - time_start
     assert backoff < estimated_time < backoff * 2
 
@@ -82,11 +77,10 @@ async def test_retry__backoff__async(async_failed):
 def test_retry__exponential_backoff(failed):
     attempts = 3
     backoff = BACKOFF
-    decorator = retry(RuntimeError, retries=attempts - 1, backoff=backoff, exponential_backoff=True)
-    decorated = decorator(failed)
+    instance = Retry(RuntimeError, retries=attempts - 1, backoff=backoff, exponential_backoff=True)
     time_start = time.time()
     with pytest.raises(RuntimeError):
-        decorated()
+        instance(failed)
     estimated_time = time.time() - time_start
     expected_time = get_exponential_backoff_time(attempts, backoff)
     assert expected_time < estimated_time < expected_time + backoff
@@ -94,9 +88,8 @@ def test_retry__exponential_backoff(failed):
 
 def test_retry__do_not_raise_when_attempts_exceeded(failed):
     on_exception = Mock()
-    decorator = retry(RuntimeError, raise_on_no_retries=False, on_exception=on_exception)
-    decorated = decorator(failed)
-    decorated()
+    instance = Retry(RuntimeError, raise_on_no_retries=False, on_exception=on_exception)
+    instance(failed)
     assert failed.call_count == 2
     assert on_exception.call_count == 2
 
@@ -104,13 +97,12 @@ def test_retry__do_not_raise_when_attempts_exceeded(failed):
 def test_retry__jitter(failed):
     attempts = 2
     backoff = BACKOFF
-    decorator = retry(RuntimeError, retries=attempts - 1, backoff=backoff, jitter=backoff)
-    decorated = decorator(failed)
+    instance = Retry(RuntimeError, retries=attempts - 1, backoff=backoff, jitter=backoff)
     estimated = []
     for _ in range(10):
         time_start = time.time()
         with pytest.raises(RuntimeError):
-            decorated()
+            instance(failed)
         estimated.append(time.time() - time_start)
     assert statistics.stdev(estimated) > backoff * 0.1
 
@@ -118,17 +110,16 @@ def test_retry__jitter(failed):
 def test_retry__maximum_backoff(failed):
     attempts = 4
     backoff = BACKOFF
-    decorator = retry(
+    instance = Retry(
         RuntimeError,
         retries=attempts - 1,
         backoff=backoff,
         exponential_backoff=True,
         maximum_backoff=backoff * 2,
     )
-    decorated = decorator(failed)
     time_start = time.time()
     with pytest.raises(RuntimeError):
-        decorated()
+        instance(failed)
     estimated_time = time.time() - time_start
     expected_time = get_exponential_backoff_time(attempts, backoff)
     assert backoff * attempts < estimated_time < expected_time
@@ -136,49 +127,18 @@ def test_retry__maximum_backoff(failed):
 
 def test_retry__on_exception(failed):
     on_exception = Mock()
-    decorator = retry(RuntimeError, on_exception=on_exception)
-    decorated = decorator(failed)
+    instance = Retry(RuntimeError, on_exception=on_exception)
     with pytest.raises(RuntimeError):
-        decorated()
+        instance(failed)
     # on_exception.assert_called_once()
     assert on_exception.call_count == 2
-
-
-def test_0_retries__ok(failed):
-    decorator = retry(RuntimeError, retries=0)
-    decorated = decorator(failed)
-    with pytest.raises(RuntimeError):
-        decorated()
-    assert failed.call_count == 1
 
 
 @pytest.mark.asyncio()
 async def test_retry__on_exception__async(async_failed):
     on_exception = AsyncMock()
-    decorator = retry(RuntimeError, on_exception=on_exception)
-    decorated = decorator(async_failed)
+    instance = RetryAsync(RuntimeError, on_exception=on_exception)
     with pytest.raises(RuntimeError):
-        await decorated()
+        await instance(async_failed)
     # on_exception.assert_called_once()
     assert on_exception.call_count == 2
-
-
-@retry(Exception, retries=3)
-def sync_retry_via_decorator(e_to_raise):
-    raise e_to_raise()
-
-
-@retry(Exception, retries=3)
-async def async_retry_via_decorator(e_to_raise):
-    raise e_to_raise()
-
-
-def test_sync_decorator():
-    with pytest.raises(ValueError):
-        sync_retry_via_decorator(ValueError)
-
-
-@pytest.mark.asyncio()
-async def test_async_decorator():
-    with pytest.raises(ValueError):
-        await async_retry_via_decorator(ValueError)

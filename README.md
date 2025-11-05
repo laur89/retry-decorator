@@ -77,7 +77,8 @@ So... it's up to you which project you raise your PR against, but contributions 
 
 ## Credits
 
-This project is a fork of upstream https://github.com/pnpnpn/retry-decorator
+This project is largely influenced & sourced from https://github.com/pnpnpn/retry-decorator
+and https://gitlab.com/ramil.minnigaliev/the-retry
 
 
 ## See also
