@@ -18,7 +18,7 @@ setup(
         license=__license__,
         scripts=[],
         packages=find_packages(),
-        long_description=open(readme_f).read() if exists(readme_f) else __description__,
+        # long_description=open(readme_f).read() if exists(readme_f) else __description__,
         python_requires='>=3.7',
         install_requires=[],
         classifiers=[
