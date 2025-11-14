@@ -4,71 +4,15 @@ name: Build, test, release
   #pull_request:
     #branches:
       #- main
-on: [push]
+
+# note "create" event is just so our flows trigger on tag pushes that
+# are tagged with [ci skip], see https://github.com/orgs/community/discussions/179637
+on: [push, create]
 #on:
   #push:
     #branches: [ "main", "master" ]
-#permissions:
-  #contents: write
 
 jobs:
   call-build:
-    permissions:
-      contents: write
-      #pull-requests: write
-      #id-token: write
-    uses: laur89/workflows/.github/workflows/py-build-publish.yml@master
-    #secrets:
-      #token: ${{ secrets.GITHUB_TOKEN }}
-    #secrets: inherit
-
-
-  # note publish to pypi cannot be ran from reusable workflows, follow
-  # https://github.com/pypa/gh-action-pypi-publish/issues/166 for more details
-  publish-to-pypi:
-    name: >-
-      Publish Python 🐍 distribution 📦 to PyPI
-    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      #url: https://pypi.org/p/<package-name>  # Replace <package-name> with your PyPI project name; optional
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v4
-      with:
-        name: release-dist
-        path: dist/
-    - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-
-  #publish-to-testpypi:
-    #name: Publish Python 🐍 distribution 📦 to TestPyPI
-    # choose one here: either if OR needs:
-    #needs:
-    #- call-build
-    #if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
-    #runs-on: ubuntu-latest
-
-    #environment:
-      #name: testpypi
-      ##url: https://test.pypi.org/p/<package-name>; optional
-
-    #permissions:
-      #id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    #steps:
-    #- name: Download all the dists
-      #uses: actions/download-artifact@v4
-      #with:
-        #name: release-dist
-        #path: dist/
-    #- name: Publish distribution 📦 to TestPyPI
-      #uses: pypa/gh-action-pypi-publish@release/v1
-      #with:
-        #repository-url: https://test.pypi.org/legacy/
-
-
+    uses: haridusministeerium/workflows/.github/workflows/py-build-publish-app.yml@master
+    secrets: inherit

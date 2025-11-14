@@ -27,9 +27,9 @@ classifiers = [
 ]
 
 [project.urls]
-homepage = "https://github.com/laur89/retry-deco"
-issues = "https://github.com/laur89/retry-deco/issues"
-changelog = "https://github.com/laur89/retry-deco/blob/master/CHANGELOG.md"
+homepage = "https://github.com/haridusministeerium/retry-deco"
+issues = "https://github.com/haridusministeerium/retry-deco/issues"
+changelog = "https://github.com/haridusministeerium/retry-deco/blob/master/CHANGELOG.md"
 
 # Development dependencies
 # pip install -e .[lint,test,exe]
@@ -59,7 +59,7 @@ requires = [
 exclude = ["tests", "tests.*"]
 
 [tool.zest-releaser]
-extra-message = "[CI SKIP]"
+extra-message = "[skip ci]"
 # push to git remote:
 push-changes = true
 # do not release to pypi:
