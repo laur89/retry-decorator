@@ -59,7 +59,8 @@ requires = [
 exclude = ["tests", "tests.*"]
 
 [tool.zest-releaser]
-extra-message = "[skip ci]"
+#extra-message = "[skip ci]"
+extra-message = "[CI SKIP]"
 # push to git remote:
 push-changes = true
 # do not release to pypi:
