@@ -1,6 +1,6 @@
 [project]
 name = "retry-deco"
-version = "0.0.3"
+version = "0.0.4.dev0"
 description = "Retry decorator for both synchronous and asynchronous functions."
 readme = "README.md"
 requires-python = ">=3.11"
