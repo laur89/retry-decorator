@@ -94,11 +94,11 @@ def test_retry__exponential_backoff(failed):
 
 def test_retry__do_not_raise_when_attempts_exceeded(failed):
     on_exception = Mock()
-    decorator = retry(RuntimeError, raise_on_no_retries=False, on_exception=on_exception)
+    decorator = retry(RuntimeError, on_exhaustion=True, on_exception=on_exception)
     decorated = decorator(failed)
     decorated()
     assert failed.call_count == 2
-    assert on_exception.call_count == 2
+    assert on_exception.call_count == 1
 
 
 def test_retry__jitter(failed):
@@ -136,12 +136,11 @@ def test_retry__maximum_backoff(failed):
 
 def test_retry__on_exception(failed):
     on_exception = Mock()
-    decorator = retry(RuntimeError, on_exception=on_exception)
+    decorator = retry(RuntimeError, retries=4, on_exception=on_exception)
     decorated = decorator(failed)
     with pytest.raises(RuntimeError):
         decorated()
-    # on_exception.assert_called_once()
-    assert on_exception.call_count == 2
+    assert on_exception.call_count == 4
 
 
 def test_0_retries__ok(failed):
@@ -155,12 +154,11 @@ def test_0_retries__ok(failed):
 @pytest.mark.asyncio()
 async def test_retry__on_exception__async(async_failed):
     on_exception = AsyncMock()
-    decorator = retry(RuntimeError, on_exception=on_exception)
+    decorator = retry(RuntimeError, retries=3, on_exception=on_exception)
     decorated = decorator(async_failed)
     with pytest.raises(RuntimeError):
         await decorated()
-    # on_exception.assert_called_once()
-    assert on_exception.call_count == 2
+    assert on_exception.call_count == 3
 
 
 @retry(Exception, retries=3)

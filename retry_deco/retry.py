@@ -2,6 +2,7 @@ import asyncio
 import logging
 import random
 import time
+from inspect import iscoroutinefunction
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from enum import Flag
@@ -13,10 +14,11 @@ logger = logging.getLogger(__name__)
 E = TypeVar("E", bound=BaseException)
 T = Callable[..., Any | Awaitable[Any]]
 F = int | float
+X = Callable[[Exception], Any]
 
 
 class OnErrOpts(Flag):
-    DO_NOT_RUN_ON_LAST_TRY = 1
+    RUN_ON_LAST_TRY = 1
     BREAK_OUT = 2
     # NEXT_OPT = 4
 
@@ -61,9 +63,9 @@ def validate_backoff(
 def sanitize_on_exception(onex: None | dict | list | tuple | T, is_async: bool) -> dict:
     def assert_callable(c):
         if is_async:
-            assert asyncio.iscoroutinefunction(c), "on_exception must be async as decorating function"
+            assert iscoroutinefunction(c), "on_exception must be async as decorating function"
         else:
-            assert not asyncio.iscoroutinefunction(c), "on_exception must not be async as decorating function"
+            assert not iscoroutinefunction(c), "on_exception must not be async as decorating function"
             assert callable(c), "c must be callable"
 
     def assert_iter(i):
@@ -95,21 +97,22 @@ def handle_delay(
     count: int,
     retries: int,
     attempts: int,
-    raise_on_no_retries: bool,
+    on_exhaustion: bool|X,
     backoff: F,
     exponential_backoff: bool,
     maximum_backoff: F,
     jitter: F | tuple[F, F],
     function: T,
-) -> tuple[int, float]:
+) -> tuple[int, float, Any]:
     # logger.warning(f"Retry decorator catch error in {function.__name__}: {repr(exception)}")
     logger.warning(f"Retry decorator catch error in {get_f_name(function)}: {repr(exception)}")
 
     count += 1
-    # TODO: shouldn't this be if retries != -1 and count >= attempts?
-    if retries == -1 or count >= attempts:
-        if not raise_on_no_retries:
-            return count, 0
+    if retries != -1 and count >= attempts:
+        if on_exhaustion:
+            if on_exhaustion is True:
+                return count, 0, exception
+            return count, 0, on_exhaustion(exception)
         raise exception
 
     current_backoff: float = backoff
@@ -127,7 +130,7 @@ def handle_delay(
     if maximum_backoff:
         current_backoff = min(current_backoff, maximum_backoff)
 
-    return count, current_backoff
+    return count, current_backoff, None
 
 
 def unpack_callback(cb: list | tuple | T) -> tuple[T, OnErrOpts]:
@@ -138,7 +141,7 @@ def unpack_callback(cb: list | tuple | T) -> tuple[T, OnErrOpts]:
 
 
 def should_skip_cb(opts: OnErrOpts, last_try: bool) -> bool:
-    return bool(last_try and opts & OnErrOpts.DO_NOT_RUN_ON_LAST_TRY)
+    return last_try and not bool(opts & OnErrOpts.RUN_ON_LAST_TRY)
 
 
 def retry_logic(
@@ -147,7 +150,7 @@ def retry_logic(
     retries: int,
     backoff: F,
     exponential_backoff: bool,
-    raise_on_no_retries: bool,
+    on_exhaustion: bool|X,
     jitter: F | tuple[F, F],
     maximum_backoff: F,
     onex: dict,
@@ -168,12 +171,12 @@ def retry_logic(
                     if opts & OnErrOpts.BREAK_OUT:
                         break
 
-            count, current_backoff = handle_delay(
+            count, current_backoff, return_val = handle_delay(
                 e,
                 count,
                 retries,
                 attempts,
-                raise_on_no_retries,
+                on_exhaustion,
                 backoff,
                 exponential_backoff,
                 maximum_backoff,
@@ -183,6 +186,7 @@ def retry_logic(
             if current_backoff:
                 time.sleep(current_backoff)
     attempts_exceeds(f)
+    return return_val
 
 
 async def retry_logic_async(
@@ -191,7 +195,7 @@ async def retry_logic_async(
     retries: int,
     backoff: F,
     exponential_backoff: bool,
-    raise_on_no_retries: bool,
+    on_exhaustion: bool|X,
     jitter: F | tuple[F, F],
     maximum_backoff: F,
     onex: dict,
@@ -212,12 +216,12 @@ async def retry_logic_async(
                     if opts & OnErrOpts.BREAK_OUT:
                         break
 
-            count, current_backoff = handle_delay(
+            count, current_backoff, return_val = handle_delay(
                 e,
                 count,
                 retries,
                 attempts,
-                raise_on_no_retries,
+                on_exhaustion,
                 backoff,
                 exponential_backoff,
                 maximum_backoff,
@@ -227,6 +231,7 @@ async def retry_logic_async(
             if current_backoff:
                 await asyncio.sleep(current_backoff)
     attempts_exceeds(f)
+    return return_val
 
 
 def retry(
@@ -235,7 +240,7 @@ def retry(
     retries: int = 1,
     backoff: F = 0,
     exponential_backoff: bool = False,
-    raise_on_no_retries: bool = True,
+    on_exhaustion: bool|X = False,
     jitter: F | tuple[F, F] = 0,
     maximum_backoff: F = 0,
     on_exception: None | dict | list | tuple | T = None,
@@ -254,8 +259,12 @@ def retry(
             time interval between the attempts (default 0).
         exponential_backoff:
             current_backoff = backoff * 2 ** retries (default False).
-        raise_on_no_retries:
-            whether exception should be raised when all attempts fail (default True)
+        on_exhaustion:
+            False if exception should be raised when all attempts fail (default).
+            True if raised exception should be returned, not re-raised.
+            Callable, then on attempt exhaustion it'll be invoked with the
+            causing exception, and its return value will be returned. This
+            callable may not raise exceptions.
         jitter:
             maximum value of deviation from the current_backoff (default 0).
             define as (min, max) tuple to provide range to generate jitter from.
@@ -265,13 +274,13 @@ def retry(
             function that called or await on error occurs (default None).
             Be aware if a decorating function is synchronous on_exception function must be
             synchronous too and accordingly for asynchronous function on_exception must be
-            asynchronous.
+            asynchronous. May not raise exceptions.
     """
 
     validate_backoff(backoff, exponential_backoff, maximum_backoff, jitter)
 
     def decorator(f: T) -> T:
-        if asyncio.iscoroutinefunction(f):
+        if iscoroutinefunction(f):
             is_async = True
         else:
             is_async = False
@@ -287,7 +296,7 @@ def retry(
                 retries,
                 backoff,
                 exponential_backoff,
-                raise_on_no_retries,
+                on_exhaustion,
                 jitter,
                 maximum_backoff,
                 onex,
@@ -301,7 +310,7 @@ def retry(
                 retries,
                 backoff,
                 exponential_backoff,
-                raise_on_no_retries,
+                on_exhaustion,
                 jitter,
                 maximum_backoff,
                 onex,
@@ -322,7 +331,7 @@ class BaseRetry(ABC):
         "retries",
         "backoff",
         "exponential_backoff",
-        "raise_on_no_retries",
+        "on_exhaustion",
         "jitter",
         "maximum_backoff",
         "on_exception",
@@ -330,15 +339,14 @@ class BaseRetry(ABC):
 
     def __init__(
         self,
-        is_async: bool,
         expected_exception: type[E] | tuple[type[E], ...],
         retries: int,
         backoff: F,
         exponential_backoff: bool,
-        raise_on_no_retries: bool,
+        on_exhaustion: bool|X,
         jitter: F | tuple[F, F],
         maximum_backoff: F,
-        on_exception: None | dict | list | tuple | T,
+        on_exception: dict,
     ):
         validate_backoff(backoff, exponential_backoff, maximum_backoff, jitter)
 
@@ -346,10 +354,10 @@ class BaseRetry(ABC):
         self.retries = retries
         self.backoff = backoff
         self.exponential_backoff = exponential_backoff
-        self.raise_on_no_retries = raise_on_no_retries
+        self.on_exhaustion = on_exhaustion
         self.jitter = jitter
         self.maximum_backoff = maximum_backoff
-        self.on_exception = sanitize_on_exception(on_exception, is_async)
+        self.on_exception = on_exception
         super().__init__()
 
     @abstractmethod
@@ -367,7 +375,7 @@ class Retry(BaseRetry):
         "retries",
         "backoff",
         "exponential_backoff",
-        "raise_on_no_retries",
+        "on_exhaustion",
         "jitter",
         "maximum_backoff",
         "on_exception",
@@ -380,21 +388,20 @@ class Retry(BaseRetry):
         retries: int = 1,
         backoff: F = 0,
         exponential_backoff: bool = False,
-        raise_on_no_retries: bool = True,
+        on_exhaustion: bool|X = False,
         jitter: F | tuple[F, F] = 0,
         maximum_backoff: F = 0,
         on_exception: None | dict | list | tuple | Callable[..., Any] = None,
     ):
         super().__init__(
-            False,
             expected_exception,
             retries,
             backoff,
             exponential_backoff,
-            raise_on_no_retries,
+            on_exhaustion,
             jitter,
             maximum_backoff,
-            on_exception,
+            sanitize_on_exception(on_exception, False)
         )
 
     def __call__(self, f: Callable[..., Any], *args, **kwargs) -> Any:
@@ -404,7 +411,7 @@ class Retry(BaseRetry):
             self.retries,
             self.backoff,
             self.exponential_backoff,
-            self.raise_on_no_retries,
+            self.on_exhaustion,
             self.jitter,
             self.maximum_backoff,
             self.on_exception,
@@ -421,7 +428,7 @@ class RetryAsync(BaseRetry):
         "retries",
         "backoff",
         "exponential_backoff",
-        "raise_on_no_retries",
+        "on_exhaustion",
         "jitter",
         "maximum_backoff",
         "on_exception",
@@ -434,21 +441,20 @@ class RetryAsync(BaseRetry):
         retries: int = 1,
         backoff: F = 0,
         exponential_backoff: bool = False,
-        raise_on_no_retries: bool = True,
+        on_exhaustion: bool|X = False,
         jitter: F | tuple[F, F] = 0,
         maximum_backoff: F = 0,
         on_exception: None | dict | list | tuple | Callable[..., Awaitable[Any]] = None,
     ):
         super().__init__(
-            True,
             expected_exception,
             retries,
             backoff,
             exponential_backoff,
-            raise_on_no_retries,
+            on_exhaustion,
             jitter,
             maximum_backoff,
-            on_exception,
+            sanitize_on_exception(on_exception, True)
         )
 
     async def __call__(self, f: Callable[..., Awaitable[Any]], *args, **kwargs) -> Awaitable[Any]:
@@ -458,7 +464,7 @@ class RetryAsync(BaseRetry):
             self.retries,
             self.backoff,
             self.exponential_backoff,
-            self.raise_on_no_retries,
+            self.on_exhaustion,
             self.jitter,
             self.maximum_backoff,
             self.on_exception,

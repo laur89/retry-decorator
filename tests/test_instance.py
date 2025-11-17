@@ -88,10 +88,10 @@ def test_retry__exponential_backoff(failed):
 
 def test_retry__do_not_raise_when_attempts_exceeded(failed):
     on_exception = Mock()
-    instance = Retry(RuntimeError, raise_on_no_retries=False, on_exception=on_exception)
+    instance = Retry(RuntimeError, retries=3, on_exhaustion=True, on_exception=on_exception)
     instance(failed)
-    assert failed.call_count == 2
-    assert on_exception.call_count == 2
+    assert failed.call_count == 4
+    assert on_exception.call_count == 3
 
 
 def test_retry__jitter(failed):
@@ -130,15 +130,14 @@ def test_retry__on_exception(failed):
     instance = Retry(RuntimeError, on_exception=on_exception)
     with pytest.raises(RuntimeError):
         instance(failed)
-    # on_exception.assert_called_once()
-    assert on_exception.call_count == 2
+    on_exception.assert_called_once()
+    # assert on_exception.call_count == 1
 
 
 @pytest.mark.asyncio()
 async def test_retry__on_exception__async(async_failed):
     on_exception = AsyncMock()
-    instance = RetryAsync(RuntimeError, on_exception=on_exception)
+    instance = RetryAsync(RuntimeError, retries=2, on_exception=on_exception)
     with pytest.raises(RuntimeError):
         await instance(async_failed)
-    # on_exception.assert_called_once()
     assert on_exception.call_count == 2
