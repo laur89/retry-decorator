@@ -1,7 +1,7 @@
 import unittest
+from contextlib import suppress
 from decimal import Decimal
 from functools import partial
-from contextlib import suppress
 
 from retry_deco import OnErrOpts, Retry, retry
 

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import sys
 import asyncio
-from functools import partial
+import sys
 from contextlib import suppress
-from retry_deco import retry, Retry, RetryAsync
+from functools import partial
+
+from retry_deco import Retry, RetryAsync, retry
 
 
 def print_separator(f):

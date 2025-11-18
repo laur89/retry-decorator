@@ -25,7 +25,7 @@ pip install retry-deco
 
 ```python
 def retry(
-    expected_exception: type[E] | tuple[type[E], ...] = BaseException,
+    expected_exception: type[E] | tuple[type[E], ...] = Exception,
     *,
     retries: int = 1,
     backoff: N = 0,
@@ -39,7 +39,7 @@ def retry(
 
     Arguments:
         expected_exception:
-            exception or tuple of exceptions to catch. default: BaseException
+            exception or tuple of exceptions to catch. default: Exception
 
     Keyword arguments:
         retries:

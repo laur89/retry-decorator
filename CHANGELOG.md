@@ -1,7 +1,8 @@
 ## 0.0.5 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- update typing: on_exception now typed to OnEx
+- expected_exception now defaults to Exception, was BaseException
 
 
 ## 0.0.4 (2025-11-18)

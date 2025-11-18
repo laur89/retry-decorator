@@ -2,19 +2,14 @@ import asyncio
 import logging
 import random
 import time
-from inspect import iscoroutinefunction
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from enum import Flag
 from functools import partial, wraps
-from typing import Any, TypeVar
+from inspect import iscoroutinefunction
+from typing import Any
 
 logger = logging.getLogger(__name__)
-
-E = TypeVar("E", bound=BaseException)
-C = Callable[..., Any | Awaitable[Any]]
-N = int | float  # number
-X = Callable[[Exception], Any]
 
 
 class OnErrOpts(Flag):
@@ -24,6 +19,12 @@ class OnErrOpts(Flag):
 
 
 DEFAULT_ONEX_OPTS = OnErrOpts(0)
+
+E = type[BaseException]
+C = Callable[..., Any | Awaitable[Any]]
+N = int | float  # number
+X = Callable[[E], Any]
+OnEx = dict[E, C | tuple[C, OnErrOpts]]
 
 
 def get_fn_name(f: C) -> str:
@@ -60,7 +61,7 @@ def validate_backoff(
         assert j <= backoff, "jitter extreme must be <= backoff."
 
 
-def sanitize_on_exception(onex: None | dict | tuple[C, OnErrOpts] | C, is_async: bool) -> dict:
+def sanitize_on_exception(onex: None | OnEx | tuple[C, OnErrOpts] | C, is_async: bool) -> OnEx:
     def assert_callable(c):
         if is_async:
             assert iscoroutinefunction(c), "on_exception must be async as decorating function"
@@ -91,7 +92,7 @@ def sanitize_on_exception(onex: None | dict | tuple[C, OnErrOpts] | C, is_async:
 
 
 def handle_delay(
-    exception: Exception,
+    exception: E,
     count: int,
     retries: int,
     attempts: int,
@@ -143,14 +144,14 @@ def should_skip_cb(opts: OnErrOpts, last_try: bool) -> bool:
 
 def retry_logic(
     f: Callable[..., Any],
-    expected_exception: type[E] | tuple[type[E], ...],
+    expected_exception: E | tuple[E, ...],
     retries: int,
     backoff: N,
     exponential_backoff: bool,
     on_exhaustion: bool | X,
     jitter: N | tuple[N, N],
     max_backoff: N,
-    onex: dict,
+    onex: OnEx,
 ) -> Any:
     count = 0
     attempts = retries + 1
@@ -188,14 +189,14 @@ def retry_logic(
 
 async def retry_logic_async(
     f: Callable[..., Awaitable[Any]],
-    expected_exception: type[E] | tuple[type[E], ...],
+    expected_exception: E | tuple[E, ...],
     retries: int,
     backoff: N,
     exponential_backoff: bool,
     on_exhaustion: bool | X,
     jitter: N | tuple[N, N],
     max_backoff: N,
-    onex: dict,
+    onex: OnEx,
 ) -> Any:
     count = 0
     attempts = retries + 1
@@ -232,7 +233,7 @@ async def retry_logic_async(
 
 
 def retry(
-    expected_exception: type[E] | tuple[type[E], ...] = BaseException,
+    expected_exception: E | tuple[E, ...] = Exception,
     *,
     retries: int = 1,
     backoff: N = 0,
@@ -240,13 +241,13 @@ def retry(
     on_exhaustion: bool | X = False,
     jitter: N | tuple[N, N] = 0,
     max_backoff: N = 0,
-    on_exception: None | dict | tuple[C, OnErrOpts] | C = None,
+    on_exception: None | OnEx | tuple[C, OnErrOpts] | C = None,
 ):
     """Retry decorator for synchronous and asynchronous functions.
 
     Arguments:
         expected_exception:
-            exception or tuple of exceptions to catch. default: BaseException
+            exception or tuple of exceptions to catch. default: Exception
 
     Keyword arguments:
         retries:
@@ -296,7 +297,7 @@ def retry(
             is_async = False
             assert callable(f), "function must be callable"
 
-        onex: dict = sanitize_on_exception(on_exception, is_async)
+        onex: OnEx = sanitize_on_exception(on_exception, is_async)
 
         @wraps(f)
         def wrapper(*args, **kwargs) -> Any:
@@ -349,14 +350,14 @@ class BaseRetry(ABC):
 
     def __init__(
         self,
-        expected_exception: type[E] | tuple[type[E], ...],
+        expected_exception: E | tuple[E, ...],
         retries: int,
         backoff: N,
         exponential_backoff: bool,
         on_exhaustion: bool | X,
         jitter: N | tuple[N, N],
         max_backoff: N,
-        on_exception: dict,
+        on_exception: OnEx,
     ):
         validate_backoff(backoff, exponential_backoff, max_backoff, jitter)
 
@@ -393,7 +394,7 @@ class Retry(BaseRetry):
 
     def __init__(
         self,
-        expected_exception: type[E] | tuple[type[E], ...] = BaseException,
+        expected_exception: E | tuple[E, ...] = Exception,
         *,
         retries: int = 1,
         backoff: N = 0,
@@ -401,7 +402,7 @@ class Retry(BaseRetry):
         on_exhaustion: bool | X = False,
         jitter: N | tuple[N, N] = 0,
         max_backoff: N = 0,
-        on_exception: None | dict | tuple[C, OnErrOpts] | Callable[..., Any] = None,
+        on_exception: None | OnEx | tuple[C, OnErrOpts] | Callable[..., Any] = None,
     ):
         super().__init__(
             expected_exception,
@@ -446,7 +447,7 @@ class RetryAsync(BaseRetry):
 
     def __init__(
         self,
-        expected_exception: type[E] | tuple[type[E], ...] = BaseException,
+        expected_exception: E | tuple[E, ...] = Exception,
         *,
         retries: int = 1,
         backoff: N = 0,
@@ -454,7 +455,7 @@ class RetryAsync(BaseRetry):
         on_exhaustion: bool | X = False,
         jitter: N | tuple[N, N] = 0,
         max_backoff: N = 0,
-        on_exception: None | dict | tuple[C, OnErrOpts] | Callable[..., Awaitable[Any]] = None,
+        on_exception: None | OnEx | tuple[C, OnErrOpts] | Callable[..., Awaitable[Any]] = None,
     ):
         super().__init__(
             expected_exception,
