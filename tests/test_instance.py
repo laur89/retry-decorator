@@ -107,7 +107,7 @@ def test_retry__jitter(failed):
     assert statistics.stdev(estimated) > backoff * 0.1
 
 
-def test_retry__maximum_backoff(failed):
+def test_retry__max_backoff(failed):
     attempts = 4
     backoff = BACKOFF
     instance = Retry(
@@ -115,7 +115,7 @@ def test_retry__maximum_backoff(failed):
         retries=attempts - 1,
         backoff=backoff,
         exponential_backoff=True,
-        maximum_backoff=backoff * 2,
+        max_backoff=backoff * 2,
     )
     time_start = time.time()
     with pytest.raises(RuntimeError):

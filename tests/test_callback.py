@@ -86,7 +86,9 @@ class MyTestCase(unittest.TestCase):
         with suppress(ExampleTestError):
             on_exception_cb_has_run_on_last_try__and__break_out_opts_set()
         self.assertEqual(class_for_testing.hello, "foo6")  # note it's not 'bar5' due to RUN_ON_LAST_TRY
-        self.assertEqual(class_for_testing.cb_counter, 9)  # value not 17 due to BREAK_OUT; and not 8 due to RUN_ON_LAST_TRY
+        self.assertEqual(
+            class_for_testing.cb_counter, 9
+        )  # value not 17 due to BREAK_OUT; and not 8 due to RUN_ON_LAST_TRY
         self.assertEqual(class_for_testing.exe_counter, 9)
 
     # very similar to previous, but different callbacks
@@ -342,7 +344,7 @@ def on_exhaustion_callback_set():
 def infinite_retries_set(succeed_after: int):
     class_for_testing.exe_counter += 1
     if class_for_testing.exe_counter == succeed_after:
-        return 'success'
+        return "success"
     raise AttributeError()
 
 
