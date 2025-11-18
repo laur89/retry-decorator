@@ -1,4 +1,4 @@
-## 0.0.4 (unreleased)
+## 0.0.4 (2025-11-18)
 ---------------------
 
 - maximum_backoff -> max_backoff
