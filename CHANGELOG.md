@@ -1,4 +1,4 @@
-## 0.0.5 (unreleased)
+## 0.0.5 (2025-11-21)
 ---------------------
 
 - update typing: on_exception now typed to OnEx
