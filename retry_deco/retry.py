@@ -4,7 +4,7 @@ import random
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
-from enum import Flag
+from enum import IntFlag
 from functools import partial, wraps
 from inspect import iscoroutinefunction
 from typing import Any
@@ -12,7 +12,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-class OnErrOpts(Flag):
+class OnErrOpts(IntFlag):
     RUN_ON_LAST_TRY = 1
     BREAK_OUT = 2
     # NEXT_OPT = 4
